@@ -263,7 +263,7 @@ export default function SessionsPage() {
         const studentLon = position.coords.longitude;
         const targetLat = session.location?.latitude;
         const targetLon = session.location?.longitude;
-        const radiusLimit = 5000;
+        const radiusLimit = 50;
 
         if (!targetLat || !targetLon) {
           setLocationError({ id: sessionId, distance: 0, message: "รายวิชานี้ไม่มีข้อมูลพิกัดในระบบ" });

@@ -308,6 +308,13 @@ export default function AdminPage() {
   const createCourseByAdmin = async (e: FormEvent) => {
     e.preventDefault();
     resetNotice();
+
+    // ดัก Error ก่อนส่ง: เผื่อว่าลืมเลือกอาจารย์
+    if (!newCourseTeacherId) {
+      setError("กรุณาเลือกอาจารย์ผู้สอน");
+      return;
+    }
+
     setIsLoading(true);
     try {
       const res = await callWithAuth("/courses", {
@@ -319,31 +326,46 @@ export default function AdminPage() {
           teacherId: newCourseTeacherId,
           department: newCourseDepartment,
           roomLocation: newCourseRoomLocation,
+          
+          // 👇 เพิ่ม Location แบบเป็น Object เข้าไป
+          location: {
+            latitude: 18.89562855,
+            longitude: 99.01279187,
+            building: newCourseRoomLocation || "Computer Science Dept"
+          },
+          
+          // 👇 ใส่ Schedule ชั่วคราว (คุณสามารถไปทำช่องกรอกเพิ่มทีหลังได้)
+          schedule: "Wednesday 09:00-12:00",
+          isActive: true,
+
           semester: Number(newCourseSemester),
           academicYear: Number(newCourseAcademicYear),
           totalClasses: Number(newCourseTotalClasses),
           credits: Number(newCourseCredits),
-          latitude: newCourseLatitude ? Number(newCourseLatitude) : undefined,
-          longitude: newCourseLongitude ? Number(newCourseLongitude) : undefined,
           studentIds: newCourseStudentIds.length ? newCourseStudentIds : undefined,
-          isActive: newCourseIsActive,
         }),
       });
+
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.message || "สร้างรายวิชาไม่สำเร็จ");
+        console.error("Backend Validation Error:", data);
+        // ถ้า Backend สาด Error เป็น Array ให้แปลงเป็น String คั่นด้วยลูกน้ำ
+        const errorMessage = Array.isArray(data.message) 
+          ? data.message.join(", ") 
+          : data.message;
+        throw new Error(errorMessage || "สร้างรายวิชาไม่สำเร็จ");
       }
+
       setSuccess("สร้างรายวิชาสำเร็จ");
       setNewCourseCode("");
       setNewCourseName("");
       setNewCourseDescription("");
       setNewCourseRoomLocation("");
-      setNewCourseLatitude("");
-      setNewCourseLongitude("");
       setNewCourseStudentIds([]);
-      setNewCourseIsActive(true);
+      
       const coursesRes = await callWithAuth("/courses");
-      if (coursesRes.ok) setCourses(await coursesRes.json());
+      if (coursesRes?.ok) setCourses(await coursesRes.json());
+      
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -549,7 +571,7 @@ export default function AdminPage() {
                           className="w-full h-11 rounded-xl bg-white border border-indigo-200 px-4 text-[11px] font-black uppercase tracking-wider outline-none focus:ring-4 focus:ring-indigo-500/10 transition-all"
                         />
                         <div className="space-y-2">
-                          <label className="block text-[9px] font-black text-indigo-400 uppercase tracking-widest pl-1">ลำดับหมายเลขโต๊ะ (S-Session)</label>
+                          <label className="block text-[9px] font-black text-indigo-400 uppercase tracking-widest pl-1">ลำดับหมายเลขตาราง (S-Session)</label>
                           <div className="grid grid-cols-5 gap-1.5">
                             {[...Array(10)].map((_, i) => {
                               const val = String(i + 1);
