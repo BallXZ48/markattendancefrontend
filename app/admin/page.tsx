@@ -372,6 +372,7 @@ export default function AdminPage() {
       setIsLoading(false);
     }
   };
+    
 
   return (
     <main className="min-h-screen text-[#130f2a] font-sans relative overflow-hidden bg-[#CBD5E1] flex flex-col">
